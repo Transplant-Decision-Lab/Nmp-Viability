@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  
+  <!-- PWA / Installable App -->
+  <meta name="theme-color" content="#1e3a5f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NMP Graft Score" />
+  
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  
+  <title>NMP Graft Viability Score</title>
+
+  <style>
+    :root {
+      --navy: #1e3a5f;
+      --teal: #0d9488;
+      --teal-dark: #0f766e;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #b91c1c;
+      --warn: #b45309;
+      --success: #047857;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 12px;
+      -webkit-text-size-adjust: 100%;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    header {
+      background: linear-gradient(135deg, var(--navy), var(--teal-dark));
+      color: white;
+      padding: 1.3rem 1.4rem;
+      border-radius: 12px;
+      margin-bottom: 1.1rem;
+    }
+    header h1 { font-size: 1.28rem; font-weight: 700; line-height: 1.25; }
+    header p { opacity: 0.92; font-size: 0.9rem; margin-top: 0.25rem; }
+    .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      font-size: 0.68rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 999px;
+      margin-top: 0.4rem;
+      margin-right: 0.25rem;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.2rem 1.3rem;
+      margin-bottom: 1rem;
+    }
+    .card h2 {
+      font-size: 1rem;
+      color: var(--navy);
+      margin-bottom: 0.8rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 2px solid var(--teal);
+      display: inline-block;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem 0.9rem;
+    }
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 0.18rem;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.7rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 16px;
+      background: #fff;
+    }
+    .btn-row {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 1.1rem;
+    }
+    button {
+      flex: 1;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      padding: 1rem 1.2rem;
+      min-height: 52px;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    #btnCalculate {
+      background: var(--teal);
+      color: white;
+    }
+    #btnCalculate:active { background: var(--teal-dark); }
+    #btnReset {
+      background: #e2e8f0;
+      color: var(--navy);
+    }
+    #btnReset:active { background: #cbd5e1; }
+    #result { display: none; margin-top: 0.5rem; }
+    .score-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      margin-bottom: 0.9rem;
+    }
+    @media (max-width: 500px) {
+      .score-grid { grid-template-columns: 1fr; }
+    }
+    .score-box {
+      text-align: center;
+      padding: 0.85rem;
+      border-radius: 10px;
+      background: #f0fdfa;
+      border: 1px solid #99f6e4;
+    }
+    .score-box.ext {
+      background: #f0f9ff;
+      border-color: #bae6fd;
+    }
+    .score-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--navy);
+    }
+    .score-label { font-size: 0.75rem; color: var(--muted); }
+    .risk {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      margin-top: 0.35rem;
+    }
+    .high { background: #d1fae5; color: var(--success); }
+    .mod  { background: #fef3c7; color: var(--warn); }
+    .low  { background: #fee2e2; color: var(--danger); }
+    .criteria-list { font-size: 0.86rem; margin-top: 0.5rem; }
+    .criteria-list div {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.28rem 0;
+      border-bottom: 1px solid #f1f5f9;
+      gap: 0.4rem;
+    }
+    .pass { color: var(--success); font-weight: 600; }
+    .fail { color: var(--danger); font-weight: 600; }
+    .na   { color: var(--muted); }
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin: 0.7rem 0 0.2rem;
+    }
+    .interp {
+      background: #f8fafc;
+      border-left: 4px solid var(--teal);
+      padding: 0.7rem 0.85rem;
+      margin-top: 0.8rem;
+      font-size: 0.88rem;
+      border-radius: 0 8px 8px 0;
+    }
+    .caveat {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      padding: 0.7rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      margin-top: 0.8rem;
+    }
+    .note { font-size: 0.78rem; color: var(--muted); margin-top: 0.4rem; font-style: italic; }
+    footer {
+      text-align: center;
+      font-size: 0.76rem;
+      color: var(--muted);
+      margin-top: 1.4rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--teal); font-weight: 600; text-decoration: none; }
+    .methods { font-size: 0.85rem; color: var(--muted); }
+    .methods ul { margin: 0.3rem 0 0 1.1rem; }
+    .evidence-item {
+      margin-bottom: 0.95rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .evidence-item:last-child { border-bottom: none; }
+    .evidence-item h3 { font-size: 0.9rem; color: var(--navy); margin-bottom: 0.2rem; }
+    .evidence-item a { color: var(--teal); font-weight: 600; font-size: 0.82rem; word-break: break-all; }
+    #status {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="status">Loading…</div>
+
+    <header>
+      <h1>NMP Graft Viability Score</h1>
+      <p>OrganOx Metra · Pre-specified pilot score for liver graft viability</p>
+      <span class="badge">Research tool</span>
+      <span class="badge">Core + Extended</span>
+    </header>
+
+    <!-- INPUTS -->
+    <div class="card">
+      <h2>Perfusion Metrics</h2>
+      <div class="grid">
+        <div>
+          <label for="pid">Case ID (optional)</label>
+          <input type="text" id="pid" placeholder="NMP-2026-017" />
+        </div>
+        <div>
+          <label for="device">Device</label>
+          <select id="device">
+            <option value="OrganOx_Metra" selected>OrganOx Metra</option>
+            <option value="XPS_LiverAssist">XPS Liver Assist</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="lac4">Lactate at ~4 h (mmol/L) *</label>
+          <input type="number" id="lac4" step="0.1" inputmode="decimal" placeholder="e.g. 1.9" />
+        </div>
+        <div>
+          <label for="alt2">ALT at ~2 h (U/L) *</label>
+          <input type="number" id="alt2" step="10" inputmode="numeric" placeholder="e.g. 2100" />
+        </div>
+        <div>
+          <label for="bile">Bile production present?</label>
+          <select id="bile">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <div>
+          <label for="lacFalling">Lactate falling (first 2 h)?</label>
+          <select id="lacFalling">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <div>
+          <label for="haFlow">HA flow (mL/min)</label>
+          <input type="number" id="haFlow" step="5" inputmode="numeric" placeholder="e.g. 280" />
+        </div>
+        <div>
+          <label for="pvFlow">PV flow (mL/min)</label>
+          <input type="number" id="pvFlow" step="10" inputmode="numeric" placeholder="e.g. 950" />
+        </div>
+        <div>
+          <label for="glucoseFalling">Glucose metabolism (falling)?</label>
+          <select id="glucoseFalling">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <div>
+          <label for="bilePh">Bile pH (optional)</label>
+          <input type="number" id="bilePh" step="0.01" inputmode="decimal" placeholder="e.g. 7.52" />
+        </div>
+        <div>
+          <label for="perfPh">Perfusate pH (for Δ pH)</label>
+          <input type="number" id="perfPh" step="0.01" inputmode="decimal" placeholder="e.g. 7.28" />
+        </div>
+      </div>
+      <p class="note">* Required fields. Δ pH = Bile pH − Perfusate pH (threshold ≥ 0.10). Optional fields can be left blank.</p>
+
+      <div class="btn-row">
+        <button type="button" id="btnCalculate">Calculate Scores</button>
+        <button type="button" id="btnReset">Reset</button>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="card" id="result">
+      <h2>Results</h2>
+      <div class="score-grid">
+        <div class="score-box">
+          <div class="score-value" id="coreScore">—</div>
+          <div class="score-label">Original Pilot (0–4)</div>
+          <div id="coreBadge" class="risk">—</div>
+        </div>
+        <div class="score-box ext">
+          <div class="score-value" id="extScore">—</div>
+          <div class="score-label">Extended Pilot (0–9)</div>
+          <div id="extBadge" class="risk">—</div>
+        </div>
+      </div>
+
+      <div class="section-label">Core Criteria</div>
+      <div class="criteria-list" id="coreList"></div>
+
+      <div class="section-label">Supporting Criteria</div>
+      <div class="criteria-list" id="supportList"></div>
+
+      <div class="interp" id="interpretation"></div>
+      <div class="caveat">
+        <strong>Important:</strong> These are pre-specified research scores only. They are not validated for standalone clinical decision-making. Always interpret with full clinical context and MDT discussion.
+      </div>
+    </div>
+
+    <!-- EVIDENCE -->
+    <div class="card methods">
+      <h2>Evidence &amp; Background</h2>
+
+      <div class="evidence-item">
+        <h3>1. Lactate ≤ 2.5 mmol/L at ~4 h</h3>
+        <p>Most consistent viability parameter. Mandatory in the VITTAL trial.</p>
+        <p><a href="https://www.nature.com/articles/s41467-020-16251-3" target="_blank" rel="noopener">Mergental et al., Nature Communications 2020 (VITTAL)</a></p>
+      </div>
+
+      <div class="evidence-item">
+        <h3>2. ALT at ~2 h &lt; 6000 U/L</h3>
+        <p>Marker of hepatocellular injury. Used in Cambridge criteria.</p>
+        <p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11740183/" target="_blank" rel="noopener">Jeddou et al., 2025 review</a></p>
+      </div>
+
+      <div class="evidence-item">
+        <h3>3. Bile production present</h3>
+        <p>Functional marker. Supporting in VITTAL, core in Groningen protocols.</p>
+        <p><a href="https://www.nature.com/articles/s41467-020-16251-3" target="_blank" rel="noopener">Mergental et al. (VITTAL)</a></p>
+      </div>
+
+      <div class="evidence-item">
+        <h3>4. Lactate falling (first 2 h)</h3>
+        <p>Trajectory information. Aligns with Cambridge emphasis on clearance rate.</p>
+      </div>
+
+      <div class="evidence-item">
+        <h3>5. HA flow ≥ 150 &amp; PV flow ≥ 500 mL/min</h3>
+        <p>VITTAL minor criteria for adequate dual perfusion.</p>
+        <p><a href="https://www.nature.com/articles/s41467-020-16251-3" target="_blank" rel="noopener">Mergental et al. 2020</a></p>
+      </div>
+
+      <div class="evidence-item">
+        <h3>6. Glucose metabolism</h3>
+        <p>Supporting criterion in VITTAL and Cambridge protocols.</p>
+      </div>
+
+      <div class="evidence-item">
+        <h3>7. Bile pH ≥ 7.45</h3>
+        <p>Cholangiocellular marker (Groningen).</p>
+        <p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11740183/" target="_blank" rel="noopener">Jeddou et al. review</a></p>
+      </div>
+
+      <div class="evidence-item">
+        <h3>8. Δ pH (bile − perfusate) ≥ 0.10</h3>
+        <p>More specific biliary epithelial function marker used by the Groningen group.</p>
+        <p><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11740183/" target="_blank" rel="noopener">Jeddou et al. 2025</a></p>
+      </div>
+    </div>
+
+    <div class="card methods">
+      <h2>Relationship to Standard Criteria</h2>
+      <ul>
+        <li><strong>VITTAL / Birmingham</strong> — Core score follows mandatory lactate + supporting items.</li>
+        <li><strong>Cambridge</strong> — Shares ALT threshold and focus on lactate dynamics + bile chemistry.</li>
+        <li><strong>Groningen</strong> — Bile pH and Δ pH reflect their cholangiocellular criteria.</li>
+      </ul>
+    </div>
+
+    <footer>
+      Research tool · OrganOx Metra primary<br>
+      Dr Shabnam Islam · Transplant Surgery · Perth, WA<br>
+      <a href="https://www.linkedin.com/in/shabnam-rabia-i" target="_blank" rel="noopener">LinkedIn</a>
+      · Not a medical device
+    </footer>
+  </div>
+
+  <script>
+    function getNum(id) {
+      var el = document.getElementById(id);
+      if (!el || el.value === "") return null;
+      var n = parseFloat(el.value);
+      return isNaN(n) ? null : n;
+    }
+
+    function getVal(id) {
+      var el = document.getElementById(id);
+      return el ? el.value : "";
+    }
+
+    function setBadge(score, max, id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var cls, txt;
+      if (score >= max - 1) {
+        cls = "high";
+        txt = "Stronger signals";
+      } else if (score >= Math.ceil(max / 2)) {
+        cls = "mod";
+        txt = "Intermediate";
+      } else {
+        cls = "low";
+        txt = "Limited signals";
+      }
+      el.className = "risk " + cls;
+      el.textContent = txt;
+    }
+
+    function doCalculate() {
+      try {
+        var lac4 = getNum("lac4");
+        var alt2 = getNum("alt2");
+
+        if (lac4 === null || alt2 === null) {
+          alert("Please enter both Lactate at ~4 h and ALT at ~2 h");
+          return;
+        }
+
+        var bile     = getVal("bile") === "yes";
+        var lacFall  = getVal("lacFalling") === "yes";
+        var ha       = getNum("haFlow");
+        var pv       = getNum("pvFlow");
+        var gluc     = getVal("glucoseFalling") === "yes";
+        var bilePh   = getNum("bilePh");
+        var perfPh   = getNum("perfPh");
+
+        // Core criteria (0–4)
+        var c1 = lac4 <= 2.5;
+        var c2 = alt2 < 6000;
+        var c3 = bile;
+        var c4 = lacFall;
+        var core = (c1 ? 1 : 0) + (c2 ? 1 : 0) + (c3 ? 1 : 0) + (c4 ? 1 : 0);
+
+        // Supporting criteria
+        var s1 = (ha !== null && ha >= 150);
+        var s2 = (pv !== null && pv >= 500);
+        var s3 = gluc;
+        var s4 = (bilePh !== null) ? (bilePh >= 7.45) : null;
+
+        var delta = null;
+        var s5 = null;
+        if (bilePh !== null && perfPh !== null) {
+          delta = bilePh - perfPh;
+          s5 = delta >= 0.10;
+        }
+
+        var ext = core + (s1 ? 1 : 0) + (s2 ? 1 : 0) + (s3 ? 1 : 0);
+        if (s4 === true) ext += 1;
+        if (s5 === true) ext += 1;
+
+        // Core list
+        document.getElementById("coreList").innerHTML =
+          "<div><span>Lactate ≤ 2.5 at ~4 h</span><span class=\"" + (c1 ? "pass" : "fail") + "\">" + (c1 ? "PASS" : "FAIL") + " (" + lac4 + ")</span></div>" +
+          "<div><span>ALT &lt; 6000 at ~2 h</span><span class=\"" + (c2 ? "pass" : "fail") + "\">" + (c2 ? "PASS" : "FAIL") + " (" + alt2 + ")</span></div>" +
+          "<div><span>Bile production</span><span class=\"" + (c3 ? "pass" : "fail") + "\">" + (c3 ? "PASS" : "FAIL") + "</span></div>" +
+          "<div><span>Lactate falling (first 2 h)</span><span class=\"" + (c4 ? "pass" : "fail") + "\">" + (c4 ? "PASS" : "FAIL") + "</span></div>";
+
+        // Supporting list
+        var haTxt = ha === null ? "—" : ((s1 ? "PASS" : "FAIL") + " (" + ha + ")");
+        var pvTxt = pv === null ? "—" : ((s2 ? "PASS" : "FAIL") + " (" + pv + ")");
+        var bpTxt = s4 === null ? "<span class=\"na\">Not entered</span>" : "<span class=\"" + (s4 ? "pass" : "fail") + "\">" + (s4 ? "PASS" : "FAIL") + " (" + bilePh + ")</span>";
+        var dTxt  = s5 === null ? "<span class=\"na\">Not calculable</span>" : "<span class=\"" + (s5 ? "pass" : "fail") + "\">" + (s5 ? "PASS" : "FAIL") + " (Δ " + delta.toFixed(2) + ")</span>";
+
+        document.getElementById("supportList").innerHTML =
+          "<div><span>HA flow ≥ 150</span><span class=\"" + (ha === null ? "na" : (s1 ? "pass" : "fail")) + "\">" + haTxt + "</span></div>" +
+          "<div><span>PV flow ≥ 500</span><span class=\"" + (pv === null ? "na" : (s2 ? "pass" : "fail")) + "\">" + pvTxt + "</span></div>" +
+          "<div><span>Glucose metabolism</span><span class=\"" + (s3 ? "pass" : "fail") + "\">" + (s3 ? "PASS" : "FAIL") + "</span></div>" +
+          "<div><span>Bile pH ≥ 7.45</span>" + bpTxt + "</div>" +
+          "<div><span>Δ pH ≥ 0.10</span>" + dTxt + "</div>";
+
+        document.getElementById("coreScore").textContent = core;
+        document.getElementById("extScore").textContent = ext;
+        setBadge(core, 4, "coreBadge");
+        setBadge(ext, 9, "extBadge");
+
+        var msg = "Original Pilot: " + core + "/4 · Extended Pilot: " + ext + "/9. ";
+        if (ext >= 7) {
+          msg += "Most criteria met, including cholangiocellular markers where available.";
+        } else if (ext >= 5) {
+          msg += "Moderate criteria met. Review missing supporting elements.";
+        } else {
+          msg += "Limited criteria met. Requires careful MDT review.";
+        }
+        document.getElementById("interpretation").textContent = msg;
+
+        var res = document.getElementById("result");
+        res.style.display = "block";
+        res.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      } catch (e) {
+        alert("Calculation error: " + e.message);
+      }
+    }
+
+    function doReset() {
+      document.getElementById("pid").value = "";
+      document.getElementById("device").value = "OrganOx_Metra";
+      document.getElementById("lac4").value = "";
+      document.getElementById("alt2").value = "";
+      document.getElementById("bile").value = "yes";
+      document.getElementById("lacFalling").value = "yes";
+      document.getElementById("haFlow").value = "";
+      document.getElementById("pvFlow").value = "";
+      document.getElementById("glucoseFalling").value = "yes";
+      document.getElementById("bilePh").value = "";
+      document.getElementById("perfPh").value = "";
+      document.getElementById("result").style.display = "none";
+    }
+
+    function setup() {
+      var calcBtn = document.getElementById("btnCalculate");
+      var resetBtn = document.getElementById("btnReset");
+      if (calcBtn) calcBtn.onclick = function () { doCalculate(); };
+      if (resetBtn) resetBtn.onclick = function () { doReset(); };
+      var status = document.getElementById("status");
+      if (status) status.textContent = "Calculator ready ✓";
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", setup);
+    } else {
+      setup();
+    }
+  </script>
+</body>
+</html>
